@@ -62,17 +62,23 @@ client.on("guildMemberAdd", async (member) => {
         console.error(e);
     }
 
-    // autorole system
-    
-    const guildId = member.guild.id;
-    const autoroleData = await Autorole.findOne({ guildId });
+    // Autorole system
+    try {
+        const guildId = member.guild.id;
+        const autoroleData = await Autorole.findOne({ guildId });
 
-    if (!autoroleData || autoroleData.roles.length === 0) return;
+        if (!autoroleData || autoroleData.roles.length === 0) return;
 
-    autoroleData.roles.forEach(roleId => {
-      const role = member.guild.roles.cache.get(roleId);
-      if (role) {
-        member.roles.add(role).catch(console.error);
-      }
-    });
+        for (const roleId of autoroleData.roles) {
+            const role = member.guild.roles.cache.get(roleId);
+            if (role) {
+                await member.roles.add(role);
+                console.log(`Added role ${role.name} (${role.id}) to ${member.user.tag}`);
+            } else {
+                console.log(`Role with ID ${roleId} not found in guild ${guildId}`);
+            }
+        }
+    } catch (error) {
+        console.error(`Error adding autoroles: ${error}`);
+    }
 });
