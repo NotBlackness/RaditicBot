@@ -2,6 +2,7 @@ const welcomeSchema = require('../Schemas/welcomeSchema');
 const { EmbedBuilder } = require('discord.js');
 const client = require(process.cwd() + '/src/index.js');
 const { color } = require('../config');
+const Autorole = require('../Schemas/autoroleSchema');
 
 client.on("guildMemberAdd", async (member) => {
     const data = await welcomeSchema.findOne({ guildId: member.guild.id });
@@ -60,4 +61,18 @@ client.on("guildMemberAdd", async (member) => {
         channel.send('An error occurred while sending the welcome message.');
         console.error(e);
     }
+
+    // autorole system
+    
+    const guildId = member.guild.id;
+    const autoroleData = await Autorole.findOne({ guildId });
+
+    if (!autoroleData || autoroleData.roles.length === 0) return;
+
+    autoroleData.roles.forEach(roleId => {
+      const role = member.guild.roles.cache.get(roleId);
+      if (role) {
+        member.roles.add(role).catch(console.error);
+      }
+    });
 });

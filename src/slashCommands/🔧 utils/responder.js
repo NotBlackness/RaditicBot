@@ -1,11 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 const schema = require('../../Schemas/autoresponder');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('autoresponse')
     .setDescription('Manage Auto Responder')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(subcommand =>
       subcommand
         .setName('add')
@@ -45,6 +44,12 @@ module.exports = {
         .setDescription('Remove all auto responses.')
     ),
   async execute({ interaction }) {
+
+     if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+       return await interaction.reply({ content: 'You must have **Administrator** permission to use this command.', ephemeral: true });
+     }
+
+    
     const subcommand = interaction.options.getSubcommand();
     const guildId = interaction.guild.id;
 
