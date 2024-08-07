@@ -5,6 +5,27 @@ const { color } = require('../config');
 const Autorole = require('../Schemas/autoroleSchema');
 
 client.on("guildMemberAdd", async (member) => {
+    // Autorole system
+    try {
+        const guildId = member.guild.id;
+        const autoroleData = await Autorole.findOne({ guildId });
+
+        if (!autoroleData || autoroleData.roles.length === 0) return;
+
+        for (const roleId of autoroleData.roles) {
+            const role = member.guild.roles.cache.get(roleId);
+            if (role) {
+                await member.roles.add(role);
+                console.log(`Added role ${role.name} (${role.id}) to ${member.user.tag}`);
+            } else {
+                console.log(`Role with ID ${roleId} not found in guild ${guildId}`);
+            }
+        }
+    } catch (error) {
+        console.error(`Error adding autoroles: ${error}`);
+    }
+
+    // welcome system
     const data = await welcomeSchema.findOne({ guildId: member.guild.id });
 
     if (!data) return;
@@ -60,25 +81,5 @@ client.on("guildMemberAdd", async (member) => {
     } catch (e) {
         channel.send('An error occurred while sending the welcome message.');
         console.error(e);
-    }
-
-    // Autorole system
-    try {
-        const guildId = member.guild.id;
-        const autoroleData = await Autorole.findOne({ guildId });
-
-        if (!autoroleData || autoroleData.roles.length === 0) return;
-
-        for (const roleId of autoroleData.roles) {
-            const role = member.guild.roles.cache.get(roleId);
-            if (role) {
-                await member.roles.add(role);
-                console.log(`Added role ${role.name} (${role.id}) to ${member.user.tag}`);
-            } else {
-                console.log(`Role with ID ${roleId} not found in guild ${guildId}`);
-            }
-        }
-    } catch (error) {
-        console.error(`Error adding autoroles: ${error}`);
     }
 });

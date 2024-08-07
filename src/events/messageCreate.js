@@ -113,7 +113,5 @@ client.on("messageCreate", async msg => {
       console.error('Error executing command:', error);
       return msg.reply('There was an error executing that command!');
     }
-  } else {
-    console.log(`Command not found: ${commandName}`);
   }
 });
