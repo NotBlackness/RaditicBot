@@ -1,13 +1,18 @@
 const { RockPaperScissors } = require('discord-gamecord');
 const { color } = require('../../config');
+
 module.exports = {
   usage: 'rock-paper-scissors <@opponent>',
   name: 'rock-paper-scissors',
   aliases: ['rps', 'rock-paper-scissor'],
   description: 'Play a Rock Paper Scissors game with your friend.',
-  async execute({ msg }) {
+  async execute({ msg, args }) {
     try {
       // Check if an opponent was mentioned
+      if (!args[0]) {
+        return msg.reply('Please mention an opponent to start a Rock Paper Scissors game.');
+      }
+
       const replacedArg = args[0].replace(/[<@!>]/g, '');
       const opponent = msg.guild.members.cache.get(replacedArg);
       
@@ -17,10 +22,10 @@ module.exports = {
 
       const Game = new RockPaperScissors({
         message: msg,
-        opponent: opponent.user, // Use opponent.user instead of opponent
+        opponent: opponent.user,
         embed: {
           title: 'Rock Paper Scissors',
-          color: `${color.default}`,
+          color: color.default,
           description: 'Press a button to make your choice.'
         },
         buttons: {
@@ -33,7 +38,6 @@ module.exports = {
           paper: '📰',
           scissors: '✂️'
         },
-        mentionedUser: true,
         timeoutTime: 60000,
         buttonStyle: 'PRIMARY',
         pickMessage: 'You chose {emoji}',
@@ -45,8 +49,9 @@ module.exports = {
 
       Game.startGame();
       Game.on('gameOver', result => {
-        return;
+        // Optional: Handle any post-game actions here if needed.
       });
+
     } catch (error) {
       console.error('Error starting Rock Paper Scissors game:', error);
       msg.reply('There was an error starting the Rock Paper Scissors game.');

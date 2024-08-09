@@ -25,12 +25,15 @@ module.exports = {
       }
     }
 
+    // Include the command message itself in the deletion
+    amount += 1;
+
     try {
       const now = Date.now();
       let fetched = await msg.channel.messages.fetch({ limit: amount });
 
-      // Filter out the command message itself and messages older than 14 days
-      fetched = fetched.filter(m => now - m.createdTimestamp < 14 * 24 * 60 * 60 * 1000 && m.id !== msg.id);
+      // Filter out messages older than 14 days
+      fetched = fetched.filter(m => now - m.createdTimestamp < 14 * 24 * 60 * 60 * 1000);
 
       if (fetched.size === 0) {
         return msg.reply("I can't delete messages that are older than 14 days.").then((reply1) => {
@@ -40,9 +43,10 @@ module.exports = {
         });
       }
 
-      await msg.channel.bulkDelete(fetched, true); // `true` filters out messages older than 14 days, but we already did this manually
+      // Perform the bulk delete
+      await msg.channel.bulkDelete(fetched, true); // `true` is used to skip messages older than 14 days
 
-      const reply = await msg.channel.send(`Successfully purged ${fetched.size} message(s).`);
+      const reply = await msg.channel.send(`Successfully purged ${fetched.size - 1} message(s).`);
       setTimeout(() => {
         reply.delete();
       }, 3000);
