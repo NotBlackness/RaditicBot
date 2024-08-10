@@ -1,11 +1,11 @@
 const { PermissionsBitField, EmbedBuilder } = require('discord.js');
-const { default: axios } = require('axios');
+const axios = require('axios');
 const { color } = require('../../config');
 
 module.exports = {
     name: 'steal',
     description: 'Steal an emoji or sticker for your server.',
-    usage: 'steal <emoji/sticker> [name] or reply to a message with the command to steal an emoji or sticker.',
+    usage: 'steal <emoji/sticker> [name]',
 
     async execute({msg, args}) {
         if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
@@ -21,7 +21,7 @@ module.exports = {
         }
 
         if (!emojiOrSticker && replyMessage) {
-            // If no emoji is provided, check the replied message for an emoji or sticker
+            // If no emoji/sticker is provided, check the replied message
             const emojiMatch = replyMessage.content.match(/<a?:\w+:\d{15,}>/);
             const sticker = replyMessage.stickers.first();
 
@@ -35,18 +35,18 @@ module.exports = {
         }
 
         if (emojiOrSticker.startsWith('<') && emojiOrSticker.endsWith('>')) {
+            // Handle custom emoji
             const id = emojiOrSticker.match(/\d{15,}/g)[0];
             const type = await axios.get(`https://cdn.discordapp.com/emojis/${id}.gif`)
                 .then(() => "gif")
                 .catch(() => "png");
 
-            emojiOrSticker = `https://cdn.discordapp.com/emojis/${id}.${type}?quality=lossless`;
-
+            const emojiURL = `https://cdn.discordapp.com/emojis/${id}.${type}?quality=lossless`;
             const defaultNameMatch = emojiOrSticker.match(/:([^:]+):/);
-            const defaultName = defaultNameMatch ? defaultNameMatch[1] : 'emoji';
+            const defaultName = defaultNameMatch ? defaultNameMatch[1] : 'default';
 
             try {
-                const addedEmoji = await msg.guild.emojis.create({ attachment: emojiOrSticker, name: name || defaultName });
+                const addedEmoji = await msg.guild.emojis.create({ attachment: emojiURL, name: name || defaultName });
 
                 const embed = new EmbedBuilder()
                     .setColor(color.default)
@@ -64,11 +64,13 @@ module.exports = {
         } else if (emojiOrSticker.startsWith('http')) {
             // Handle stickers
             try {
-                const addedSticker = await msg.guild.stickers.create({ url: emojiOrSticker, name: name || 'sticker' });
+                const response = await axios.get(emojiOrSticker, { responseType: 'arraybuffer' });
+                const buffer = Buffer.from(response.data, 'binary');
+                const addedSticker = await msg.guild.stickers.create(buffer, name || 'sticker');
 
                 const embed = new EmbedBuilder()
                     .setColor(color.default)
-                    .setDescription(`Added sticker **${addedSticker.name}** successfully.`);
+                    .setDescription(`Added sticker **${name || 'sticker'}** successfully.`);
 
                 await msg.reply({ embeds: [embed] });
             } catch (error) {
@@ -76,7 +78,7 @@ module.exports = {
                 await msg.reply('Failed to create sticker. Please try again later.');
             }
         } else {
-            return msg.reply(`You can't steal a basic emoticon or invalid sticker!`);
+            return msg.reply(`You can't steal a basic emoticon or an invalid sticker!`);
         }
     },
 };
