@@ -11,11 +11,7 @@ module.exports = {
   description: "Shows some information about the bot.",
   async execute({ client, msg }) {
     // Send initial message to indicate that the bot is gathering information
-    const initialEmbed = new EmbedBuilder()
-      .setColor(color.default)
-      .setDescription("Getting bot information...");
-
-    const message = await msg.reply({ embeds: [initialEmbed] });
+    const message = await msg.reply(`Getting bot information....`);
 
     // Calculate uptime
     const days = Math.floor(client.uptime / 86400000);

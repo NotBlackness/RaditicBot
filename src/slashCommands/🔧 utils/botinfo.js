@@ -31,11 +31,7 @@ module.exports = {
         const memoryUsage = formatBytes(process.memoryUsage().heapUsed);
 
         // Initial embed to show while processing
-        const initialEmbed = new EmbedBuilder()
-            .setColor(color.default)
-            .setDescription("Getting bot information...");
-
-        const message = await interaction.editReply({ embeds: [initialEmbed] });
+        const message = await interaction.editReply("Getting bot information...");
 
         // Calculate CPU usage
         cpuStat.usagePercent(async (error, percent) => {
