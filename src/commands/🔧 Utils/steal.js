@@ -5,7 +5,7 @@ const { color } = require('../../config');
 module.exports = {
     name: 'steal',
     description: 'Steal an emoji or sticker for your server.',
-    usage: 'steal <emoji/sticker> [name]',
+    usage: 'steal <emoji/sticker> [name] or reply to a message with the command to steal an emoji or sticker.',
 
     async execute({msg, args}) {
         if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
@@ -42,7 +42,7 @@ module.exports = {
                 .catch(() => "png");
 
             const emojiURL = `https://cdn.discordapp.com/emojis/${id}.${type}?quality=lossless`;
-            const defaultNameMatch = emojiOrSticker.match(/:([^:]+):/);
+            const defaultNameMatch = emojiOrSticker.match(/:(\w+):/);
             const defaultName = defaultNameMatch ? defaultNameMatch[1] : 'default';
 
             try {
@@ -64,9 +64,15 @@ module.exports = {
         } else if (emojiOrSticker.startsWith('http')) {
             // Handle stickers
             try {
+                // Fetch the sticker image
                 const response = await axios.get(emojiOrSticker, { responseType: 'arraybuffer' });
                 const buffer = Buffer.from(response.data, 'binary');
-                const addedSticker = await msg.guild.stickers.create(buffer, name || 'sticker');
+
+                // Create the sticker (adjust based on your Discord.js version)
+                await msg.guild.stickers.create({
+                    file: buffer,
+                    name: name || 'sticker',
+                });
 
                 const embed = new EmbedBuilder()
                     .setColor(color.default)
