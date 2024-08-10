@@ -84,9 +84,9 @@ client.giveawayManager = new GiveawaysManager(client, {
 
         botsCanWin: false,
 
-        embedColor: `${color.default}`,
+        embedColor: color.default,
 
-        embedColorEnd: `${color.default}`,
+        embedColorEnd: color.default,
 
         reaction: `🎉`,
 

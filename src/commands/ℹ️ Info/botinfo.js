@@ -10,6 +10,13 @@ module.exports = {
   aliases: ['bot-info'],
   description: "Shows some information about the bot.",
   async execute({ client, msg }) {
+    // Send initial message to indicate that the bot is gathering information
+    const initialEmbed = new EmbedBuilder()
+      .setColor(color.default)
+      .setDescription("Getting bot information...");
+
+    const message = await msg.reply({ embeds: [initialEmbed] });
+
     // Calculate uptime
     const days = Math.floor(client.uptime / 86400000);
     const hours = Math.floor((client.uptime / 3600000) % 24);
@@ -57,7 +64,7 @@ module.exports = {
           { name: "**Total Member(s):**", value: `${client.users.cache.size.toLocaleString()}`, inline: false },
           { name: "**Total Channel(s):**", value: `${client.channels.cache.size.toLocaleString()}`, inline: false },
           { name: "**UpTime:**", value: `${uptimeString}`, inline: false },
-          { name: "**Ping:**", value: `API Latency: **${client.ws.ping}**ms\nClient Ping: **${Date.now() - msg.createdTimestamp}**ms`, inline: false },
+          { name: "**Ping:**", value: `API Latency: **${client.ws.ping}**ms\nClient Ping: **${Date.now() - message.createdTimestamp}**ms`, inline: false },
           { name: "\u200B", value: "\u200B", inline: false },
           { name: "**NodeJS Version:**", value: `${nodeVersion}`, inline: false },
           { name: "**Memory Usage:**", value: `${memoryUsage}`, inline: false },
@@ -66,7 +73,8 @@ module.exports = {
           { name: "**Cores:**", value: `${cores}`, inline: false },
         );
 
-      msg.reply({ embeds: [botinfoEmbed] });
+      // Edit the initial message to show the bot info
+      message.edit({ embeds: [botinfoEmbed] });
     });
 
     // Function to format bytes as human-readable text
