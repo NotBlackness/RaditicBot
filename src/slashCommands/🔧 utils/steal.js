@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } = require('discord.js');
-const axios = require('axios');
+const { default: axios } = require('axios');
 const { color } = require('../../config');
 
 module.exports = {
@@ -13,28 +13,35 @@ module.exports = {
         .addStringOption(option => 
             option.setName('name')
                 .setDescription('The name you want to give to the stolen emoji.')
-                .setRequired(false)), // Name is now optional
+                .setRequired(false)),
 
-    async execute({interaction}) {
+    async execute({ interaction }) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
             return interaction.reply({ content: 'You do not have the permissions to use this command!', ephemeral: true });
         }
 
         let emoji = interaction.options.getString('emoji')?.trim();
-        let name = interaction.options.getString('name') || null; // Default to null if not provided
+        let name = interaction.options.getString('name');
 
-        // Extract the default name from the emoji string
         if (emoji.startsWith('<') && emoji.endsWith('>')) {
-            const id = emoji.match(/\d{15,}/g)[0];
+            const idMatch = emoji.match(/\d{15,}/g);
+            if (!idMatch) return interaction.reply({ content: 'Invalid emoji format!', ephemeral: true });
+
+            const id = idMatch[0];
             const type = await axios.get(`https://cdn.discordapp.com/emojis/${id}.gif`)
                 .then(() => "gif")
                 .catch(() => "png");
 
             emoji = `https://cdn.discordapp.com/emojis/${id}.${type}?quality=lossless`;
 
-            // Extract the emoji name from the input
+            // Extract the emoji name if not provided
             if (!name) {
-                name = emoji.match(/:([^:]+):/)[1];
+                const nameMatch = emoji.match(/:([^:]+):/);
+                if (nameMatch) {
+                    name = nameMatch[1]; // Set the name to the extracted emoji name
+                } else {
+                    name = 'default';
+                }
             }
         }
 

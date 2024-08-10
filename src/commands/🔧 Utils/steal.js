@@ -1,37 +1,52 @@
 const { PermissionsBitField, EmbedBuilder } = require('discord.js');
-const axios = require('axios');
+const { default: axios } = require('axios');
 const { color } = require('../../config');
 
 module.exports = {
     name: 'steal',
-    description: 'Steal an emoji for your server.',
-    usage: 'steal <emoji> [name]',
+    description: 'Steal an emoji or sticker for your server.',
+    usage: 'steal <emoji/sticker> [name] or reply to a message with the command to steal an emoji or sticker.',
 
     async execute({msg, args}) {
         if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
             return msg.reply('You do not have the permissions to use this command!');
         }
 
-        let emoji = args[0]?.trim();
+        let emojiOrSticker = args[0] ? args[0].trim() : null;
+        const replyMessage = msg.reference ? await msg.channel.messages.fetch(msg.reference.messageId) : null;
         const name = args[1] || null;
 
-        if (!emoji) {
-            return msg.reply('Please provide an emoji to steal.');
+        if (!emojiOrSticker && !replyMessage) {
+            return msg.reply('Please provide an emoji, sticker, or reply to a message containing one.');
         }
 
-        if (emoji.startsWith('<') && emoji.endsWith('>')) {
-            const id = emoji.match(/\d{15,}/g)[0];
+        if (!emojiOrSticker && replyMessage) {
+            // If no emoji is provided, check the replied message for an emoji or sticker
+            const emojiMatch = replyMessage.content.match(/<a?:\w+:\d{15,}>/);
+            const sticker = replyMessage.stickers.first();
+
+            if (emojiMatch) {
+                emojiOrSticker = emojiMatch[0];
+            } else if (sticker) {
+                emojiOrSticker = sticker.url;
+            } else {
+                return msg.reply('The replied message does not contain a valid emoji or sticker.');
+            }
+        }
+
+        if (emojiOrSticker.startsWith('<') && emojiOrSticker.endsWith('>')) {
+            const id = emojiOrSticker.match(/\d{15,}/g)[0];
             const type = await axios.get(`https://cdn.discordapp.com/emojis/${id}.gif`)
                 .then(() => "gif")
                 .catch(() => "png");
 
-            emoji = `https://cdn.discordapp.com/emojis/${id}.${type}?quality=lossless`;
+            emojiOrSticker = `https://cdn.discordapp.com/emojis/${id}.${type}?quality=lossless`;
 
-            const defaultNameMatch = emoji.match(/:(\w+):/);
-            const defaultName = defaultNameMatch ? defaultNameMatch[1] : 'default';
+            const defaultNameMatch = emojiOrSticker.match(/:([^:]+):/);
+            const defaultName = defaultNameMatch ? defaultNameMatch[1] : 'emoji';
 
             try {
-                const addedEmoji = await msg.guild.emojis.create({ attachment: emoji, name: name || defaultName });
+                const addedEmoji = await msg.guild.emojis.create({ attachment: emojiOrSticker, name: name || defaultName });
 
                 const embed = new EmbedBuilder()
                     .setColor(color.default)
@@ -46,10 +61,22 @@ module.exports = {
                     await msg.reply('Failed to create emoji. Please try again later.');
                 }
             }
-        } else if (!emoji.startsWith('http')) {
-            return msg.reply(`You can't steal a basic emoticon!`);
+        } else if (emojiOrSticker.startsWith('http')) {
+            // Handle stickers
+            try {
+                const addedSticker = await msg.guild.stickers.create({ url: emojiOrSticker, name: name || 'sticker' });
+
+                const embed = new EmbedBuilder()
+                    .setColor(color.default)
+                    .setDescription(`Added sticker **${addedSticker.name}** successfully.`);
+
+                await msg.reply({ embeds: [embed] });
+            } catch (error) {
+                console.error('Failed to create sticker:', error);
+                await msg.reply('Failed to create sticker. Please try again later.');
+            }
         } else {
-            return msg.reply('The provided emoji is not valid or cannot be stolen.');
+            return msg.reply(`You can't steal a basic emoticon or invalid sticker!`);
         }
     },
 };
