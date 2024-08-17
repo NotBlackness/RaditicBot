@@ -1,6 +1,7 @@
 const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
+    usage: "purge <amount/all>",
     name: 'purge',
     description: 'Purges a specified number of messages (up to 100).',
     async execute({ msg, args }) {
