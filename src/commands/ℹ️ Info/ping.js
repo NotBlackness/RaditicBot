@@ -1,4 +1,3 @@
-con
 module.exports = {
   usage: 'ping',
   name: 'ping',
