@@ -76,7 +76,7 @@ module.exports = {
         await user.save();
         await targetUser.save();
         await i.update({
-          content: `${member}, ${msg.author} gave you ${emoji.radigem} **__${amount.toLocaleString()}__** RadiGems!**`,
+          content: `${member}, ${msg.author} gave you ${emoji.radigem} **${amount.toLocaleString()} RadiGems!**`,
           components: [],
           embeds: [],
         });
