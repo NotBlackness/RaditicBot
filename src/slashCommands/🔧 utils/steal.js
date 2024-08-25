@@ -16,16 +16,17 @@ module.exports = {
                 .setRequired(false)),
 
     async execute({ interaction }) {
+        await interaction.deferReply();
+        
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
-            return interaction.reply({ content: 'You do not have the permissions to use this command!', ephemeral: true });
+            return interaction.editReply({ content: 'You do not have the permissions to use this command!', ephemeral: true });
         }
-
         let emoji = interaction.options.getString('emoji')?.trim();
         let name = interaction.options.getString('name');
 
         if (emoji.startsWith('<') && emoji.endsWith('>')) {
             const idMatch = emoji.match(/\d{15,}/g);
-            if (!idMatch) return interaction.reply({ content: 'Invalid emoji format!', ephemeral: true });
+            if (!idMatch) return interaction.editReply({ content: 'Invalid emoji format!', ephemeral: true });
 
             const id = idMatch[0];
             const type = await axios.get(`https://cdn.discordapp.com/emojis/${id}.gif`)
@@ -46,7 +47,7 @@ module.exports = {
         }
 
         if (!emoji.startsWith('http')) {
-            return interaction.reply({ content: `You can't steal a basic emoticon!`, ephemeral: true });
+            return interaction.editReply({ content: `You can't steal a basic emoticon!`, ephemeral: true });
         }
 
         try {
@@ -56,13 +57,13 @@ module.exports = {
                 .setColor(color.default)
                 .setDescription(`Added ${addedEmoji} **successfully**, with the name: **${addedEmoji.name}**.`);
 
-            await interaction.reply({ embeds: [embed] });
+            await interaction.editReply({ embeds: [embed] });
         } catch (error) {
             if (error.message.includes('Maximum number of emojis reached')) {
-                await interaction.reply({ content: 'The server emoji slot is full. Delete some emojis to add new ones.', ephemeral: true });
+                await interaction.editReply({ content: 'The server emoji slot is full. Delete some emojis to add new ones.', ephemeral: true });
             } else {
                 console.error('Failed to create emoji:', error);
-                await interaction.reply({ content: 'Failed to create emoji. Please try again later.', ephemeral: true });
+                await interaction.editReply({ content: 'Failed to create emoji. Please try again later.', ephemeral: true });
             }
         }
     },

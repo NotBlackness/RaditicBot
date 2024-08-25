@@ -11,7 +11,7 @@ module.exports = {
   description: "Shows some information about the bot.",
   async execute({ client, msg }) {
     // Send initial message to indicate that the bot is gathering information
-    const message = await msg.reply(`Getting bot information....`);
+    const message = await msg.reply({ content: `Getting bot information....`, fetchReply: true });
 
     // Calculate uptime
     const days = Math.floor(client.uptime / 86400000);
@@ -60,7 +60,7 @@ module.exports = {
           { name: "**Total Member(s):**", value: `${client.users.cache.size.toLocaleString()}`, inline: false },
           { name: "**Total Channel(s):**", value: `${client.channels.cache.size.toLocaleString()}`, inline: false },
           { name: "**UpTime:**", value: `${uptimeString}`, inline: false },
-          { name: "**Ping:**", value: `API Latency: **${client.ws.ping}**ms\nClient Ping: **${Date.now() - message.createdTimestamp}**ms`, inline: false },
+          { name: "**Ping:**", value: `API Latency: **${Math.round(client.ws.ping)}**ms\nClient Ping: **${message.createdTimestamp - msg.createdTimestamp}**ms`, inline: false },
           { name: "\u200B", value: "\u200B", inline: false },
           { name: "**NodeJS Version:**", value: `${nodeVersion}`, inline: false },
           { name: "**Memory Usage:**", value: `${memoryUsage}`, inline: false },

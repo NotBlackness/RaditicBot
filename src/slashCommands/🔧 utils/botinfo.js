@@ -31,7 +31,7 @@ module.exports = {
         const memoryUsage = formatBytes(process.memoryUsage().heapUsed);
 
         // Initial embed to show while processing
-        const message = await interaction.editReply("Getting bot information...");
+        const message = await interaction.editReply({ content: "Getting bot information...", fetchReply: true });
 
         // Calculate CPU usage
         cpuStat.usagePercent(async (error, percent) => {
@@ -63,7 +63,7 @@ module.exports = {
                     { name: "**Total Member(s):**", value: `${interaction.client.users.cache.size.toLocaleString()}`, inline: false },
                     { name: "**Total Channel(s):**", value: `${interaction.client.channels.cache.size.toLocaleString()}`, inline: false },
                     { name: "**UpTime:**", value: `${uptimeString}`, inline: false },
-                    { name: "**Ping:**", value: `API Latency: **${interaction.client.ws.ping}**ms\nClient Ping: **${Date.now() - message.createdTimestamp}**ms`, inline: false },
+                    { name: "**Ping:**", value: `API Latency: **${Math.round(client.ws.ping)}**ms\nClient Ping: **${message.createdTimestamp - msg.createdTimestamp}**ms`, inline: false },
                     { name: "\u200B", value: "\u200B", inline: false },
                     { name: "**NodeJS Version:**", value: `${nodeVersion}`, inline: false },
                     { name: "**Memory Usage:**", value: `${memoryUsage}`, inline: false },
