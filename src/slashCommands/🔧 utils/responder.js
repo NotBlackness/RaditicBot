@@ -43,47 +43,35 @@ module.exports = {
         .setName('remove-all')
         .setDescription('Remove all auto responses.')
     ),
+
   async execute({ interaction }) {
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return await interaction.reply({ content: 'You must have **Administrator** permission to use this command.', ephemeral: true });
+    }
 
-     if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-       return await interaction.reply({ content: 'You must have **Administrator** permission to use this command.', ephemeral: true });
-     }
-
-    
     const subcommand = interaction.options.getSubcommand();
     const guildId = interaction.guild.id;
 
     if (subcommand === 'add') {
       const trigger = interaction.options.getString('trigger').toLowerCase();
-      const response = interaction.options.getString('response').toLowerCase();
+      const response = interaction.options.getString('response');
 
-      const data = await schema.findOne({ guildId });
-
+      let data = await schema.findOne({ guildId });
       if (!data) {
-        await schema.create({
+        // Create new schema if it doesn't exist
+        data = await schema.create({
           guildId,
-          autoresponses: [
-            {
-              trigger,
-              response,
-            }
-          ]
+          autoresponses: [{ trigger, response }],
         });
       } else {
-        const autoresponders = data.autoresponses;
-        for (const t of autoresponders) {
-          if (t.trigger === trigger) {
-            return interaction.reply({
-              content: "You must have unique triggers.",
-              ephemeral: true
-            });
-          }
+        // Check for duplicate triggers
+        if (data.autoresponses.some(res => res.trigger === trigger)) {
+          return interaction.reply({ content: 'You must have unique triggers.', ephemeral: true });
         }
 
-        await schema.findOneAndUpdate(
-          { guildId },
-          { $push: { autoresponses: { trigger, response } } }
-        );
+        // Add new autoresponse
+        data.autoresponses.push({ trigger, response });
+        await data.save();
       }
 
       const embed = new EmbedBuilder()
@@ -98,27 +86,13 @@ module.exports = {
       const trigger = interaction.options.getString('trigger').toLowerCase();
 
       const data = await schema.findOne({ guildId });
-      if (!data) {
-        const embed = new EmbedBuilder()
-          .setDescription('I couldn\'t find an auto response with that trigger.')
-          .setColor('#A020F0');
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+      if (!data || !data.autoresponses.some(res => res.trigger === trigger)) {
+        return interaction.reply({ content: 'I couldn\'t find an auto response with that trigger.', ephemeral: true });
       }
 
-      const initialCount = data.autoresponses.length;
-
-      await schema.updateOne(
-        { guildId },
-        { $pull: { autoresponses: { trigger } } }
-      );
-
-      const updatedData = await schema.findOne({ guildId });
-      if (updatedData.autoresponses.length === initialCount) {
-        const embed = new EmbedBuilder()
-          .setDescription('I couldn\'t find an auto response with that trigger.')
-          .setColor('#A020F0');
-        return interaction.reply({ embeds: [embed], ephemeral: true });
-      }
+      // Remove the specific autoresponse
+      data.autoresponses = data.autoresponses.filter(res => res.trigger !== trigger);
+      await data.save();
 
       const embed = new EmbedBuilder()
         .setDescription(`Deleted auto response with trigger: ${trigger}`)
@@ -128,7 +102,7 @@ module.exports = {
     } else if (subcommand === 'list') {
       const data = await schema.findOne({ guildId });
 
-      if (!data || !data.autoresponses || data.autoresponses.length === 0) {
+      if (!data || data.autoresponses.length === 0) {
         const embed = new EmbedBuilder()
           .setTitle('AutoResponse List')
           .setDescription('No autoresponses found.')
@@ -153,14 +127,13 @@ module.exports = {
     } else if (subcommand === 'remove-all') {
       const data = await schema.findOne({ guildId });
 
-      if (!data) {
-        const embed = new EmbedBuilder()
-          .setDescription('No Autoresponder Found.')
-          .setColor('#A020F0');
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+      if (!data || data.autoresponses.length === 0) {
+        return interaction.reply({ content: 'No Autoresponder Found.', ephemeral: true });
       }
 
-      await schema.deleteMany({ guildId });
+      // Clear all autoresponses
+      data.autoresponses = [];
+      await data.save();
 
       const embed = new EmbedBuilder()
         .setDescription('Successfully deleted all responses.')
