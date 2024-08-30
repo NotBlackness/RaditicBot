@@ -9,7 +9,7 @@ module.exports = {
         .setName('botinfo')
         .setDescription('Shows some information about the bot.'),
 
-    async execute({interaction}) {
+    async execute({ interaction }) {
         // Defer reply to show that the bot is processing the command
         await interaction.deferReply();
 
@@ -24,18 +24,20 @@ module.exports = {
         if (hours > 0) uptimeString += `${hours}h `;
         if (minutes > 0) uptimeString += `${minutes}m `;
         if (seconds > 0) uptimeString += `${seconds}s`;
-
         if (!uptimeString) uptimeString = '0s'; // Show 0s if the uptime is 0
 
         // Calculate memory usage
         const memoryUsage = formatBytes(process.memoryUsage().heapUsed);
 
         // Initial embed to show while processing
-        const message = await interaction.editReply({ content: "Getting bot information...", fetchReply: true });
+        await interaction.editReply({ content: "Getting bot information...", fetchReply: true });
 
         // Calculate CPU usage
         cpuStat.usagePercent(async (error, percent) => {
-            if (error) return console.log(error);
+            if (error) {
+                console.error(error);
+                return interaction.editReply("There was an error retrieving CPU usage.");
+            }
 
             const nodeVersion = process.version;
             const CPUUsage = percent.toFixed(2);
@@ -63,7 +65,7 @@ module.exports = {
                     { name: "**Total Member(s):**", value: `${interaction.client.users.cache.size.toLocaleString()}`, inline: false },
                     { name: "**Total Channel(s):**", value: `${interaction.client.channels.cache.size.toLocaleString()}`, inline: false },
                     { name: "**UpTime:**", value: `${uptimeString}`, inline: false },
-                    { name: "**Ping:**", value: `API Latency: **${Math.round(client.ws.ping)}**ms\nClient Ping: **${message.createdTimestamp - msg.createdTimestamp}**ms`, inline: false },
+                    { name: "**Ping:**", value: `API Latency: **${Math.round(interaction.client.ws.ping)}**ms`, inline: false },
                     { name: "\u200B", value: "\u200B", inline: false },
                     { name: "**NodeJS Version:**", value: `${nodeVersion}`, inline: false },
                     { name: "**Memory Usage:**", value: `${memoryUsage}`, inline: false },
@@ -73,7 +75,7 @@ module.exports = {
                 );
 
             // Edit the initial message to show the bot info
-            await interaction.editReply({ embeds: [botinfoEmbed] });
+            await interaction.editReply({ content: null, embeds: [botinfoEmbed] });
         });
 
         // Function to format bytes as human-readable text
