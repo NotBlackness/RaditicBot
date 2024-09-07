@@ -1,4 +1,3 @@
-// Import necessary modules
 const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
@@ -15,15 +14,15 @@ module.exports = {
       if (!msg.guild.members.me.permissions.has(PermissionsBitField.Flags.BanMembers)) {
         return msg.reply("❌ | I don't have permission to ban users.");
       }
-      
+
       // Check if args[0] exists
       if (!args[0]) {
         return msg.reply('Please provide a valid user by @mention, username, or user ID.');
       }
 
       // Check if a user was mentioned
-      const replacedArg = args[0].replace(/[<@!>]/g, '');
-      const user = msg.guild.members.cache.get(replacedArg);
+      let replacedArg = args[0].replace(/[<@!>]/g, '');
+      let user = msg.guild.members.cache.get(replacedArg);
 
       // If no mention, try to find by username or user ID
       if (!user) {
@@ -45,6 +44,25 @@ module.exports = {
       // Check if the user is the guild owner
       if (msg.guild.ownerId === user.id) {
         return msg.reply("❌ | You can't ban the owner of this server!");
+      }
+
+      // Check if the user is trying to ban themselves
+      if (msg.author.id === user.id) {
+        return msg.reply("❌ | You can't ban yourself!");
+      }
+
+      // Check if the bot's highest role is above the user's highest role
+      if (msg.guild.members.me.roles.highest.position <= user.roles.highest.position) {
+        return msg.reply("❌ | I cannot ban this user because my role is not high enough in the role hierarchy.");
+      }
+
+      // Check if the user has powerful permissions (all three: Administrator, Manage Guild, Manage Roles)
+      if (
+        user.permissions.has(PermissionsBitField.Flags.Administrator) && 
+        user.permissions.has(PermissionsBitField.Flags.ManageGuild) && 
+        user.permissions.has(PermissionsBitField.Flags.ManageRoles)
+      ) {
+        return msg.reply("❌ | I cannot ban this user due to their high permissions (Administrator, Manage Guild, and Manage Roles) as a security measure.");
       }
 
       // Get the ban reason
