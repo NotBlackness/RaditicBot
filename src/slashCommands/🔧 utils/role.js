@@ -35,16 +35,27 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
     const role = interaction.options.getRole('role');
 
+    // Check bot's permission to manage roles
     if (!interaction.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
       return interaction.reply({ content: '❌ | I do not have permission to manage roles.', ephemeral: true });
     }
 
+    // Check user's permission to manage roles
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
       return interaction.reply({ content: '❌ | You do not have permission to manage roles.', ephemeral: true });
     }
 
+    // Check if the bot's highest role is above the role to be managed
     if (role.position >= interaction.guild.members.me.roles.highest.position) {
-      return interaction.reply({ content: '❌ | I could not manage the role as that role is above me in the server hierarchy.', ephemeral: true });
+      return interaction.reply({ content: '❌ | I cannot manage the role as that role is above me in the server hierarchy.', ephemeral: true });
+    }
+
+    // Check if the user's highest role is above the role to be managed
+    if (role.position >= interaction.member.roles.highest.position) {
+      return interaction.reply({ 
+        content: `❌ | You cannot manage the role <@&${role.id}> because your highest role is not above the provided role in the hierarchy.`, 
+        ephemeral: true 
+      });
     }
 
     if (subcommand === 'add') {
