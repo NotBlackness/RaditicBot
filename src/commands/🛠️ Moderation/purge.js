@@ -51,7 +51,11 @@ module.exports = {
         // Bulk delete the filtered messages
         try {
             await msg.channel.bulkDelete(filteredMessages, true);
-            msg.channel.send(`Successfully deleted ${filteredMessages.size} messages.`);
+            msg.channel.send(`Successfully deleted ${filteredMessages.size} messages.`).then((message) => {
+                setTimeout(() => {
+                    message.delete();
+                })
+            })
         } catch (error) {
             console.error(error);
             msg.reply('There was an error trying to purge messages in this channel!');
