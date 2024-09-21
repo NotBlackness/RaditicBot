@@ -1,111 +1,75 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
-const { color } = require('../../config.js');
+const { SlashCommandBuilder } = require('discord.js');
+const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('purge')
-    .setDescription('Purge messages from the channel')
-    .addIntegerOption(option =>
-      option.setName('amount')
-        .setDescription('Number of messages to purge')
-        .setRequired(true)
-    )
-    .addStringOption(option =>
-      option.setName('filter')
-        .setDescription('Filter options for purging')
-        .setRequired(true)
-        .addChoices(
-          { name: 'All', value: 'all' },
-          { name: 'Links', value: 'links' },
-          { name: 'Bot Messages', value: 'bot' },
-          { name: 'Invites', value: 'invites' },
-          { name: 'Attachments', value: 'attachments' },
-          { name: 'Images', value: 'images' },
-        )),
+    data: new SlashCommandBuilder()
+        .setName('purge')
+        .setDescription('Delete a number of messages or filter by specific criteria')
+        .addStringOption(option => 
+            option.setName('amount')
+                .setDescription('Number of messages to delete or "all"')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option.setName('filter')
+                .setDescription('Filter the messages (Bots, Humans, Attachments, Links)')
+                .addChoices(
+                    { name: 'Bots', value: 'bots' },
+                    { name: 'Humans', value: 'humans' },
+                    { name: 'Attachments', value: 'attachments' },
+                    { name: 'Links', value: 'links' }
+                )
+        ),
+    async execute({interaction}) {
+        // Ensure the user has the required permissions
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+            return interaction.reply({ content: 'You do not have permission to manage messages.', ephemeral: true });
+        }
 
-  async execute({interaction}) {
-    if (!interaction.member.roles.cache.has(PermissionsBitField.Flags.ManageMessages)) {
-      const noPermissionEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Permission Error')
-        .setDescription('You do not have the required permissions to use this command.')
-        .setTimestamp();
+        const amount = interaction.options.getString('amount');
+        const filter = interaction.options.getString('filter');
+        let deleteAmount = parseInt(amount);
 
-      return interaction.reply({ embeds: [noPermissionEmbed], ephemeral: true });
-    }
+        if (amount === 'all') deleteAmount = 100; // Max of 100 messages can be deleted at once by Discord API
 
-    const amount = interaction.options.getInteger('amount');
-    const filter = interaction.options.getString('filter');
-    const channel = interaction.channel;
+        if (isNaN(deleteAmount) || deleteAmount <= 0 || deleteAmount > 100) {
+            return interaction.reply({ content: 'Please specify a valid number between 1 and 100 or use "all".', ephemeral: true });
+        }
 
-    if (amount < 1 || amount > 100) {
-      const invalidAmountEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Invalid Amount')
-        .setDescription('Please specify a valid number of messages to purge (1-100).')
-        .setTimestamp();
+        // Fetch messages
+        const messages = await interaction.channel.messages.fetch({ limit: deleteAmount });
+        let filteredMessages;
 
-      return interaction.reply({ embeds: [invalidAmountEmbed], ephemeral: true });
-    }
+        // Apply filters if specified
+        if (filter) {
+            switch (filter) {
+                case 'bots':
+                    filteredMessages = messages.filter(msg => msg.author.bot);
+                    break;
+                case 'humans':
+                    filteredMessages = messages.filter(msg => !msg.author.bot);
+                    break;
+                case 'attachments':
+                    filteredMessages = messages.filter(msg => msg.attachments.size > 0);
+                    break;
+                case 'links':
+                    const linkRegex = /(https?:\/\/[^\s]+)/g;
+                    filteredMessages = messages.filter(msg => linkRegex.test(msg.content));
+                    break;
+                default:
+                    return interaction.reply({ content: 'Invalid filter provided.', ephemeral: true });
+            }
+        } else {
+            filteredMessages = messages; // No filter, delete all
+        }
 
-    let messages;
-
-    try {
-      switch (filter) {
-        case 'links':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.content.includes('http://') || msg.content.includes('https://'));
-          break;
-        case 'bot':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.author.bot);
-          break;
-        case 'invites':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => /discord\.gg\/\w+/i.test(msg.content));
-          break;
-        case 'attachments':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.attachments.size > 0);
-          break;
-        case 'images':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.attachments.some(attachment => attachment.name.match(/\.(png|jpe?g|gif)$/i)));
-          break;
-        case 'all':
-        default:
-          messages = await channel.messages.fetch({ limit: amount });
-          break;
-      }
-
-      if (messages.size === 0) {
-        const noMessagesEmbed = new EmbedBuilder()
-          .setColor(color.default)
-          .setFooter({ text: 'Parrot' })
-          .setTitle('No Messages to Purge')
-          .setDescription('There are no messages in the channel to purge.')
-          .setTimestamp();
-
-        return interaction.reply({ embeds: [noMessagesEmbed], ephemeral: true });
-      }
-
-      await channel.bulkDelete([...messages.values()], true);
-      const purgeSuccessEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Purge Successful')
-        .setDescription(`Successfully purged ${messages.size} message(s).`)
-        .setTimestamp();
-
-      interaction.reply({ embeds: [purgeSuccessEmbed], ephemeral: true });
-    } catch (error) {
-      console.error('Error purging messages:', error);
-      const purgeErrorEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Purge Error')
-        .setDescription('An error occurred while purging messages.')
-        .setTimestamp();
-
-      interaction.reply({ embeds: [purgeErrorEmbed], ephemeral: true });
-    }
-  },
+        // Bulk delete filtered messages
+        try {
+            await interaction.channel.bulkDelete(filteredMessages, true);
+            await interaction.reply({ content: `Successfully deleted ${filteredMessages.size} messages.`, ephemeral: true });
+        } catch (error) {
+            console.error(error);
+            interaction.reply({ content: 'There was an error trying to purge messages in this channel!', ephemeral: true });
+        }
+    },
 };

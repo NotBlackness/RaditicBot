@@ -1,94 +1,61 @@
-const { EmbedBuilder, PermissionsBitField } = require('discord.js');
-const { color } = require('../../config.js');
+const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
-  name: 'purge',
-  description: 'Purge messages from the channel',
-  usage: 'purge <amount> <filter>',
-  aliases: ['clear'],
-  async execute({msg, args}) {
-    if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-      const noPermissionEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Permission Error')
-        .setDescription('You do not have the required permissions to use this command.')
-        .setTimestamp();
+    name: 'purge',
+    description: 'Delete a number of messages or filter by specific criteria',
+    async execute({msg, args}) {
+        // Check if the user has Manage Messages permission
+        if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+            return msg.reply('You do not have permission to manage messages.');
+        }
 
-      return msg.reply({ embeds: [noPermissionEmbed], ephemeral: true });
-    }
+        // Check if the first argument is "all" or a number
+        const amount = args[0];
+        let deleteAmount = parseInt(amount);
 
-    const amount = parseInt(args[0]);
-    const filter = args[1];
-    const channel = msg.channel;
+        if (amount === 'all') deleteAmount = 100; // Max of 100 messages can be deleted at once
 
-    if (isNaN(amount) || amount < 1 || amount > 100) {
-      const invalidAmountEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Invalid Amount')
-        .setDescription('Please specify a valid number of messages to purge (1-100).')
-        .setTimestamp();
+        if (isNaN(deleteAmount) || deleteAmount <= 0 || deleteAmount > 100) {
+            return msg.reply('Please specify a valid number between 1 and 100 or use "all".');
+        }
 
-      return msg.reply({ embeds: [invalidAmountEmbed], ephemeral: true });
-    }
+        // Get the filter option from arguments
+        const filter = args[1]?.toLowerCase();
 
-    let messages;
+        // Fetch the messages from the channel
+        const messages = await msg.channel.messages.fetch({ limit: deleteAmount });
+        let filteredMessages;
 
-    try {
-      switch (filter) {
-        case 'links':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.content.includes('http://') || msg.content.includes('https://'));
-          break;
-        case 'bot':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.author.bot);
-          break;
-        case 'invites':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => /discord\.gg\/\w+/i.test(msg.content));
-          break;
-        case 'attachments':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.attachments.size > 0);
-          break;
-        case 'images':
-          messages = await channel.messages.fetch({ limit: amount });
-          messages = messages.filter(msg => msg.attachments.some(attachment => attachment.name.match(/\.(png|jpe?g|gif)$/i)));
-          break;
-        case 'all':
-        default:
-          messages = await channel.messages.fetch({ limit: amount });
-          break;
-      }
+        // Apply the filter if provided
+        if (filter) {
+            switch (filter) {
+                case 'bots':
+                    filteredMessages = messages.filter(m => m.author.bot);
+                    break;
+                case 'humans':
+                    filteredMessages = messages.filter(m => !m.author.bot);
+                    break;
+                case 'attachments':
+                    filteredMessages = messages.filter(m => m.attachments.size > 0);
+                    break;
+                case 'links':
+                    const linkRegex = /(https?:\/\/[^\s]+)/g;
+                    filteredMessages = messages.filter(m => linkRegex.test(m.content));
+                    break;
+                default:
+                    return msg.reply('Invalid filter provided. Use one of the following: `bots`, `humans`, `attachments`, `links`.');
+            }
+        } else {
+            filteredMessages = messages; // No filter, delete all
+        }
 
-      if (messages.size === 0) {
-        const noMessagesEmbed = new EmbedBuilder()
-          .setColor(color.default)
-          .setFooter({ text: 'Parrot' })
-          .setTitle('No Messages to Purge')
-          .setDescription('There are no messages in the channel to purge.')
-          .setTimestamp();
-
-        return msg.reply({ embeds: [noMessagesEmbed], ephemeral: true });
-      }
-
-      await channel.bulkDelete([...messages.values()], true);
-      const purgeSuccessEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Purge Successful')
-        .setDescription(`Successfully purged ${messages.size} message(s).`)
-        .setTimestamp();
-
-      msg.reply({ embeds: [purgeSuccessEmbed], ephemeral: true });
-    } catch (error) {
-      console.error('Error purging messages:', error);
-      const purgeErrorEmbed = new EmbedBuilder()
-        .setColor(color.default)
-        .setTitle('Purge Error')
-        .setDescription('An error occurred while purging messages.')
-        .setTimestamp();
-
-      msg.reply({ embeds: [purgeErrorEmbed], ephemeral: true });
-    }
-  },
+        // Bulk delete the filtered messages
+        try {
+            await msg.channel.bulkDelete(filteredMessages, true);
+            msg.channel.send(`Successfully deleted ${filteredMessages.size} messages.`);
+        } catch (error) {
+            console.error(error);
+            msg.reply('There was an error trying to purge messages in this channel!');
+        }
+    },
 };
