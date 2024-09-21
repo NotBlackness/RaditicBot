@@ -21,7 +21,7 @@ module.exports = {
                 )
         ),
     async execute({interaction}) {
-        // Ensure the user has the required permissions
+        // Check if the user has the Manage Messages permission
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
             return interaction.reply({ content: 'You do not have permission to manage messages.', ephemeral: true });
         }
@@ -30,40 +30,38 @@ module.exports = {
         const filter = interaction.options.getString('filter');
         let deleteAmount = parseInt(amount);
 
-        if (amount === 'all') deleteAmount = 100; // Max of 100 messages can be deleted at once by Discord API
+        if (amount === 'all') deleteAmount = 100; // Max of 100 messages can be deleted at once
 
         if (isNaN(deleteAmount) || deleteAmount <= 0 || deleteAmount > 100) {
             return interaction.reply({ content: 'Please specify a valid number between 1 and 100 or use "all".', ephemeral: true });
         }
 
-        // Fetch messages
-        const messages = await interaction.channel.messages.fetch({ limit: deleteAmount });
-        let filteredMessages;
+        // Fetch the messages from the channel (fetch one extra to account for command executor's message)
+        const messages = await interaction.channel.messages.fetch({ limit: deleteAmount + 1 });
+        let filteredMessages = messages.filter(m => m.id !== interaction.id); // Exclude the command executor's message
 
-        // Apply filters if specified
+        // Apply the filter if provided
         if (filter) {
             switch (filter) {
                 case 'bots':
-                    filteredMessages = messages.filter(msg => msg.author.bot);
+                    filteredMessages = filteredMessages.filter(m => m.author.bot);
                     break;
                 case 'humans':
-                    filteredMessages = messages.filter(msg => !msg.author.bot);
+                    filteredMessages = filteredMessages.filter(m => !m.author.bot);
                     break;
                 case 'attachments':
-                    filteredMessages = messages.filter(msg => msg.attachments.size > 0);
+                    filteredMessages = filteredMessages.filter(m => m.attachments.size > 0);
                     break;
                 case 'links':
                     const linkRegex = /(https?:\/\/[^\s]+)/g;
-                    filteredMessages = messages.filter(msg => linkRegex.test(msg.content));
+                    filteredMessages = filteredMessages.filter(m => linkRegex.test(m.content));
                     break;
                 default:
                     return interaction.reply({ content: 'Invalid filter provided.', ephemeral: true });
             }
-        } else {
-            filteredMessages = messages; // No filter, delete all
         }
 
-        // Bulk delete filtered messages
+        // Bulk delete the filtered messages
         try {
             await interaction.channel.bulkDelete(filteredMessages, true);
             await interaction.reply({ content: `Successfully deleted ${filteredMessages.size} messages.`, ephemeral: true });
