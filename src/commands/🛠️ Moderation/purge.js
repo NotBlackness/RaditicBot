@@ -1,9 +1,10 @@
 const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
+    usage: 'purge <amount/all> [filter]',
     name: 'purge',
     description: 'Delete a number of messages or filter by specific criteria',
-    async execute(msg, args) {
+    async execute({msg, args}) {
         // Check if the user has Manage Messages permission
         if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
             return msg.reply('You do not have permission to manage messages.');

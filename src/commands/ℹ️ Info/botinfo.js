@@ -5,6 +5,7 @@ const cpuStat = require('cpu-stat');
 const { color } = require('../../config');
 
 module.exports = {
+    usage: 'botinfo',
     name: 'botinfo',
     aliases: ['bi', 'about'],
     description: 'Shows some information about the bot.',
