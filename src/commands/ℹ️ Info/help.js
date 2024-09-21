@@ -9,11 +9,12 @@ module.exports = {
   async execute({ msg, client }) {
     const customEmojis = {
       // all custom emojis to help embed
-      "MiniGames": "1245777255683063942",
-      "Moderation": "1245777326323535936",
-      "Utils": "1245777409005850688",
-      "Info": "1245777371689255034",
-      "homepage": "1245777449149796445"
+      "MiniGames": "1286947790957842452",
+      "Moderation": "1286947195509276692",
+      "Utils": "1286947168024002654",
+      "Info": "1286947107856711751",
+      "homepage": "1286947014633984041",
+      "Fun": "1286947134641274982",
     };
 
     const prefix = await getPrefix(msg.guild.id);

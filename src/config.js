@@ -15,18 +15,19 @@ module.exports = {
   mainOwnerId: "1153611682250227764",
   mongoURL: process.env.mongoURL || readFileSync('src/mongoURL.txt', 'utf-8'),
   color: {
-    default: "#8e00e7",
+    default: "#ffffff",
     red: "#ff0000",
     green: "#008000"
   },
   emoji: {
-    search: "<:search:1245782174221733918>",
-    minigames: "<:minigames:1245777255683063942>",
-    utility: "<:utility:1245777409005850688>",
-    moderation: "<:moderation:1245777326323535936>",
+    search: "<:Search:1286945870272659467>",
+    minigames: "<:Games:1286944581245599776>",
+    utility: "<:Settings:1286944591609729034>",
+    moderation: "<:Moderation:1286944601600426004>",
     dot: "<:dot:1243787726701068391>",
-    home: "<:home:1245777449149796445>",
-    info: "<:info:1245777371689255034>",
+    home: "<:Home:1286944548907651103>",
+    info: "<:Info:1286944562924752896>",
     radigem: "<:RadiGem:1274250432062951517>",
+    fun: "<:Fun:1286944571699232790>"
   },
 };
