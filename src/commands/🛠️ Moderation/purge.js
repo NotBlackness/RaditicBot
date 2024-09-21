@@ -1,54 +1,94 @@
-const { PermissionsBitField } = require('discord.js');
+const { EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { color } = require('../../config.js');
 
 module.exports = {
-    usage: "purge <amount/all>",
-    name: 'purge',
-    description: 'Purges a specified number of messages (up to 100).',
-    async execute({ msg, args }) {
-        // Check if the user has the required permission
-        if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-            return msg.reply('You do not have permission to manage messages!')
-                .then(reply => setTimeout(() => reply.delete(), 5000));
-        }
+  name: 'purge',
+  description: 'Purge messages from the channel',
+  usage: 'purge <amount> <filter>',
+  aliases: ['clear'],
+  async execute({msg, args}) {
+    if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+      const noPermissionEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Permission Error')
+        .setDescription('You do not have the required permissions to use this command.')
+        .setTimestamp();
 
-        // Check if the bot has the required permission
-        if (!msg.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-            return msg.reply('I do not have permission to manage messages!')
-                .then(reply => setTimeout(() => reply.delete(), 5000));
-        }
+      return msg.reply({ embeds: [noPermissionEmbed], ephemeral: true });
+    }
 
-        let amount = args[0];
+    const amount = parseInt(args[0]);
+    const filter = args[1];
+    const channel = msg.channel;
 
-        // Convert amount to a number and cap it at 100
-        amount = parseInt(amount) || 100;
-        amount = Math.min(amount, 100);
+    if (isNaN(amount) || amount < 1 || amount > 100) {
+      const invalidAmountEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Invalid Amount')
+        .setDescription('Please specify a valid number of messages to purge (1-100).')
+        .setTimestamp();
 
-        try {
-            // Delete the command executer's message first
-            await msg.delete();
+      return msg.reply({ embeds: [invalidAmountEmbed], ephemeral: true });
+    }
 
-            // Fetch messages to delete
-            const fetchedMessages = await msg.channel.messages.fetch({ limit: amount });
+    let messages;
 
-            // Filter out messages older than 14 days
-            const deletableMessages = fetchedMessages.filter(message => (Date.now() - message.createdTimestamp) < 14 * 24 * 60 * 60 * 1000);
+    try {
+      switch (filter) {
+        case 'links':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.content.includes('http://') || msg.content.includes('https://'));
+          break;
+        case 'bot':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.author.bot);
+          break;
+        case 'invites':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => /discord\.gg\/\w+/i.test(msg.content));
+          break;
+        case 'attachments':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.attachments.size > 0);
+          break;
+        case 'images':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.attachments.some(attachment => attachment.name.match(/\.(png|jpe?g|gif)$/i)));
+          break;
+        case 'all':
+        default:
+          messages = await channel.messages.fetch({ limit: amount });
+          break;
+      }
 
-            if (deletableMessages.size === 0) {
-                return msg.channel.send("I can't delete messages older than 14 days.")
-                    .then(reply => setTimeout(() => reply.delete(), 5000));
-            }
+      if (messages.size === 0) {
+        const noMessagesEmbed = new EmbedBuilder()
+          .setColor(color.default)
+          .setFooter({ text: 'Parrot' })
+          .setTitle('No Messages to Purge')
+          .setDescription('There are no messages in the channel to purge.')
+          .setTimestamp();
 
-            // Bulk delete messages
-            await msg.channel.bulkDelete(deletableMessages, true);
+        return msg.reply({ embeds: [noMessagesEmbed], ephemeral: true });
+      }
 
-            // Notify the user about the number of deleted messages
-            const reply = await msg.channel.send(`Purged ${deletableMessages.size} message(s).`);
-            setTimeout(() => reply.delete(), 5000);
+      await channel.bulkDelete([...messages.values()], true);
+      const purgeSuccessEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Purge Successful')
+        .setDescription(`Successfully purged ${messages.size} message(s).`)
+        .setTimestamp();
 
-        } catch (error) {
-            console.error(error);
-            msg.channel.send('There was an error trying to purge messages in this channel!')
-                .then(reply => setTimeout(() => reply.delete(), 5000));
-        }
-    },
+      msg.reply({ embeds: [purgeSuccessEmbed], ephemeral: true });
+    } catch (error) {
+      console.error('Error purging messages:', error);
+      const purgeErrorEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Purge Error')
+        .setDescription('An error occurred while purging messages.')
+        .setTimestamp();
+
+      msg.reply({ embeds: [purgeErrorEmbed], ephemeral: true });
+    }
+  },
 };

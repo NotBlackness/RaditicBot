@@ -1,49 +1,111 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { color } = require('../../config.js');
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('purge')
-        .setDescription('Purges a specified number of messages (up to 100).')
-        .addIntegerOption(option =>
-            option.setName('amount')
-                .setDescription('Number of messages to purge (up to 100)')
-                .setRequired(true)
-                .setMinValue(1)
-                .setMaxValue(100)),
-    async execute({interaction}) {
-        // Check if the user has the required permission
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-            return interaction.reply({ content: 'You do not have permission to manage messages!', ephemeral: true });
-        }
+  data: new SlashCommandBuilder()
+    .setName('purge')
+    .setDescription('Purge messages from the channel')
+    .addIntegerOption(option =>
+      option.setName('amount')
+        .setDescription('Number of messages to purge')
+        .setRequired(true)
+    )
+    .addStringOption(option =>
+      option.setName('filter')
+        .setDescription('Filter options for purging')
+        .setRequired(true)
+        .addChoices(
+          { name: 'All', value: 'all' },
+          { name: 'Links', value: 'links' },
+          { name: 'Bot Messages', value: 'bot' },
+          { name: 'Invites', value: 'invites' },
+          { name: 'Attachments', value: 'attachments' },
+          { name: 'Images', value: 'images' },
+        )),
 
-        const amount = interaction.options.getInteger('amount');
+  async execute({interaction}) {
+    if (!interaction.member.roles.cache.has(PermissionsBitField.Flags.ManageMessages)) {
+      const noPermissionEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Permission Error')
+        .setDescription('You do not have the required permissions to use this command.')
+        .setTimestamp();
 
-        try {
-            // Defer the reply to show that the bot is processing the request
-            await interaction.deferReply({ ephemeral: true });
+      return interaction.reply({ embeds: [noPermissionEmbed], ephemeral: true });
+    }
 
-            // Fetch messages to delete
-            const fetchedMessages = await interaction.channel.messages.fetch({ limit: amount });
+    const amount = interaction.options.getInteger('amount');
+    const filter = interaction.options.getString('filter');
+    const channel = interaction.channel;
 
-            // Filter out messages older than 14 days
-            const deletableMessages = fetchedMessages.filter(msg => (Date.now() - msg.createdTimestamp) < 14 * 24 * 60 * 60 * 1000);
+    if (amount < 1 || amount > 100) {
+      const invalidAmountEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Invalid Amount')
+        .setDescription('Please specify a valid number of messages to purge (1-100).')
+        .setTimestamp();
 
-            if (deletableMessages.size === 0) {
-                return interaction.editReply({ content: "I can't delete messages older than 14 days." });
-            }
+      return interaction.reply({ embeds: [invalidAmountEmbed], ephemeral: true });
+    }
 
-            // Show that the bot is deleting messages
-            await interaction.editReply({ content: "Deleting messages..." });
+    let messages;
 
-            // Bulk delete messages
-            await interaction.channel.bulkDelete(deletableMessages, true);
+    try {
+      switch (filter) {
+        case 'links':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.content.includes('http://') || msg.content.includes('https://'));
+          break;
+        case 'bot':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.author.bot);
+          break;
+        case 'invites':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => /discord\.gg\/\w+/i.test(msg.content));
+          break;
+        case 'attachments':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.attachments.size > 0);
+          break;
+        case 'images':
+          messages = await channel.messages.fetch({ limit: amount });
+          messages = messages.filter(msg => msg.attachments.some(attachment => attachment.name.match(/\.(png|jpe?g|gif)$/i)));
+          break;
+        case 'all':
+        default:
+          messages = await channel.messages.fetch({ limit: amount });
+          break;
+      }
 
-            // Edit the reply to show the success message
-            await interaction.editReply({ content: `Successfully deleted ${deletableMessages.size} message(s).` });
+      if (messages.size === 0) {
+        const noMessagesEmbed = new EmbedBuilder()
+          .setColor(color.default)
+          .setFooter({ text: 'Parrot' })
+          .setTitle('No Messages to Purge')
+          .setDescription('There are no messages in the channel to purge.')
+          .setTimestamp();
 
-        } catch (error) {
-            console.error(error);
-            interaction.editReply({ content: 'There was an error trying to purge messages in this channel!' });
-        }
-    },
+        return interaction.reply({ embeds: [noMessagesEmbed], ephemeral: true });
+      }
+
+      await channel.bulkDelete([...messages.values()], true);
+      const purgeSuccessEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Purge Successful')
+        .setDescription(`Successfully purged ${messages.size} message(s).`)
+        .setTimestamp();
+
+      interaction.reply({ embeds: [purgeSuccessEmbed], ephemeral: true });
+    } catch (error) {
+      console.error('Error purging messages:', error);
+      const purgeErrorEmbed = new EmbedBuilder()
+        .setColor(color.default)
+        .setTitle('Purge Error')
+        .setDescription('An error occurred while purging messages.')
+        .setTimestamp();
+
+      interaction.reply({ embeds: [purgeErrorEmbed], ephemeral: true });
+    }
+  },
 };
