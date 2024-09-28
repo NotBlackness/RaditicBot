@@ -108,4 +108,74 @@ process.on("uncaughtExceptionMonitor", (err, origin) => {
     console.log('Monitor uncaught exceptions:', err, origin);
 });
 
+// Music
+const { Connectors } = require('shoukaku');
+const { Kazagumo, Plugins } = require('kazagumo');
+
+const Nodes = [{
+  name: 'RaditicMusic',
+  url: 'node.lewdhutao.my.eu.org:80',
+  auth: 'youshallnotpass',
+  secure: false
+}];
+
+client.manager = new Kazagumo({
+  defaultSearchEngine: 'youtube',
+  plugins: [new Plugins.PlayerMoved(client)],
+  send: (guildId, payload) => {
+    const guild = client.guilds.cache.get(guildId);
+    if (guild) guild.shard.send(payload);
+  },
+}, new Connectors.DiscordJS(client), Nodes);
+
+client.manager.shoukaku.on('ready', (name) => console.log(`Lavalink ${name}: Ready!`));
+client.manager.shoukaku.on('error', (name, error) => console.error(`Lavalink ${name}: Error Caught,`, error));
+client.manager.shoukaku.on('close', (name, code, reason) => console.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`));
+client.manager.shoukaku.on('debug', (name, info) => console.debug(`Lavalink ${name}: Debug,`, info));
+client.manager.shoukaku.on('disconnect', (name, count) => {
+    const players = [...client.manager.shoukaku.players.values()].filter(p => p.node.name === name);
+    players.map(player => {
+        client.manager.destroyPlayer(player.guildId);
+        player.destroy();
+    });
+    console.warn(`Lavalink ${name}: Disconnected`);
+});
+
+client.manager.on("playerStart", (player, track) => {
+  // Format song duration in mm:ss format
+  const duration = ms(track.length, { colonNotation: true });
+
+  // Fetch current player volume (default if not set is 40)
+  const currentVolume = player.volume || 40;
+
+  // Create embed
+  const embed = new EmbedBuilder()
+    .setColor('#ffcc00') // You can change this to whatever color you like
+    .setTitle('🎶 Now Playing')
+    .setDescription(`**[${track.title}](${track.uri})**`)
+    .addFields(
+      { name: 'Duration', value: `\`${duration}\``, inline: true },
+      { name: 'Volume', value: `\`${currentVolume}%\``, inline: true },
+      { name: 'Author', value: `\`${track.author}\``, inline: true },
+      { name: 'Requested By', value: `${track.requester}`, inline: true }
+    )
+    .setThumbnail(track.thumbnail) // Set track thumbnail (if available)
+    .setFooter({ text: `Requested by ${track.requester.tag}`, iconURL: track.requester.displayAvatarURL() })
+    .setTimestamp();
+
+  // Send the embed message
+  client.channels.cache.get(player.textId)?.send({ embeds: [embed] })
+    .then(x => player.data.set("message", x));
+});
+
+client.manager.on("playerEnd", (player) => {
+  player.data.get("message")?.edit({content: `Finished playing`});
+});
+
+client.manager.on("playerEmpty", player => {
+  client.channels.cache.get(player.textId)?.send({content: `Destroyed player due to inactivity.`})
+      .then(x => player.data.set("message", x));
+  player.destroy();
+});
+
 client.login(token);
