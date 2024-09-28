@@ -15,6 +15,7 @@ module.exports = {
       "Info": "1286947107856711751",
       "homepage": "1286947014633984041",
       "Fun": "1286947134641274982",
+      "Music": "1289450507554914324"
     };
 
     const prefix = await getPrefix(msg.guild.id);
