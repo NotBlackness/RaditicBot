@@ -19,7 +19,7 @@ const embedSchema = new mongoose.Schema({
   },
   color: {
     type: String,
-    default: '#FFFFFF', // Default to white if no color is provided
+    default: '#fffff', // Default to white if no color is provided
   },
   footer: {
     text: {

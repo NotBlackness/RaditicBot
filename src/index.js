@@ -144,7 +144,7 @@ client.manager.shoukaku.on('disconnect', (name, count) => {
 client.manager.on("playerStart", (player, track) => {
   // Format song duration in mm:ss format
   const duration = ms(track.length, { colonNotation: true });
-
+  const loopMode = player.data.get('loop') || 'None'; // Get current loop mode
   // Fetch current player volume (default if not set is 40)
   const currentVolume = player.volume || 40;
 
@@ -156,6 +156,7 @@ client.manager.on("playerStart", (player, track) => {
     .addFields(
       { name: 'Duration', value: `\`${duration}\``, inline: true },
       { name: 'Volume', value: `\`${currentVolume}%\``, inline: true },
+      { name: 'Loop Mode', value: loopMode, inline: true },
       { name: 'Author', value: `${track.author}`, inline: true },
       { name: 'Requested By', value: `${track.requester}`, inline: true }
     )
