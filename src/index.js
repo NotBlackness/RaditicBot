@@ -156,7 +156,6 @@ client.manager.on("playerStart", (player, track) => {
     .addFields(
       { name: 'Duration', value: `\`${duration}\``, inline: true },
       { name: 'Volume', value: `\`${currentVolume}%\``, inline: true },
-      { name: 'Loop Mode', value: loopMode, inline: true },
       { name: 'Author', value: `${track.author}`, inline: true },
       { name: 'Requested By', value: `${track.requester}`, inline: true }
     )
