@@ -3,13 +3,16 @@ module.exports = {
   name: 'ping',
   description: 'Shows the bot\'s ping.',
   async execute({ msg }) {
-    // Send the initial reply and wait for the reply message object
-    const sent = await msg.reply({ content: "Pinging... 🏓" });
+    try {
 
-    // Calculate the ping
-    const ping = sent.createdTimestamp - msg.createdTimestamp;
+      const ping = Date.now() - msg.createdTimestamp;
+      const latency = Math.abs(ping);
+      const latencyFormatted = `${latency.toString().substring(0, 2)}ms`;
+        const emoji = "🏓";
 
-    // Edit the reply to show the ping
-    await sent.edit(`🏓 | Pong! **${ping}**ms.`);
+        await msg.reply(`${emoji} Pong! **${latencyFormatted}**!`);
+    } catch (error) {
+        console.error('An error occurred while executing the command:', error);
+    }
   },
 };

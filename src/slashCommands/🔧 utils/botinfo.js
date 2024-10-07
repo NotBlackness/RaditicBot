@@ -10,6 +10,9 @@ module.exports = {
         .setDescription('Shows some information about the bot.'),
 
     async execute({ interaction }) {
+        const ping = Date.now() - interaction.createdTimestamp;
+        const latency = Math.abs(ping);
+        const latencyFormatted = `${latency.toString().substring(0, 2)}ms`;
         // Defer reply to show that the bot is processing the command
         await interaction.deferReply();
 
@@ -65,7 +68,7 @@ module.exports = {
                     { name: "**Total Member(s):**", value: `${interaction.client.users.cache.size.toLocaleString()}`, inline: false },
                     { name: "**Total Channel(s):**", value: `${interaction.client.channels.cache.size.toLocaleString()}`, inline: false },
                     { name: "**UpTime:**", value: `${uptimeString}`, inline: false },
-                    { name: "**Ping:**", value: `API Latency: **${Math.round(interaction.client.ws.ping)}**ms`, inline: false },
+                    { name: "**Ping:**", value: `API Latency: **${Math.round(interaction.client.ws.ping)}**ms\nClient Ping: **${latencyFormatted}**`, inline: false },
                     { name: "\u200B", value: "\u200B", inline: false },
                     { name: "**NodeJS Version:**", value: `${nodeVersion}`, inline: false },
                     { name: "**Memory Usage:**", value: `${memoryUsage}`, inline: false },

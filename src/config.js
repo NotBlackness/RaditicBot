@@ -9,6 +9,7 @@ async function getPrefix(guildId) {
 
 module.exports = {
   token: process.env.token || readFileSync('src/token.txt', 'utf-8'),
+  topggAPI: process.env.topggAPI || readFileSync('src/topggAPI.txt', 'utf-8'),
   getPrefix, // Exporting the function to fetch prefix dynamically
   clientId: process.env.clientId || "1229438321395109929",
   ownerIds: ["1081995719210172497", "1229341293176557570", "1153611682250227764"], // Array of owner IDs

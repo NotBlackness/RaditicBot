@@ -21,26 +21,17 @@ module.exports = {
 
     if (subcommand === 'add') {
       if (args.length < 2) {
-        return msg.reply('Please mention a user to add.').then((reply) => {
+        return msg.reply('Please mention a user or provide their ID to add.').then((reply) => {
           setTimeout(() => {
             reply.delete();
           }, 3000);
         });
       }
 
-      const replacedArg = args[1].replace(/[<@!>]/g, '');
-      const user = await msg.guild.members.fetch(replacedArg).catch(() => null);
-
-      if (!user) {
-        return msg.reply('Could not find that user. Please mention a valid user.').then((reply) => {
-          setTimeout(() => {
-            reply.delete();
-          }, 3000);
-        });
-      }
+      const userId = args[1].replace(/[<@!>]/g, ''); // Extract user ID from mention or plain ID
 
       try {
-        const existingUser = await noPrefixSchema.findOne({ userId: user.id });
+        const existingUser = await noPrefixSchema.findOne({ userId });
 
         if (existingUser) {
           return msg.reply('User is already in the no-prefix list.').then((reply) => {
@@ -50,9 +41,14 @@ module.exports = {
           });
         }
 
-        const newUser = new noPrefixSchema({ userId: user.id });
+        const newUser = new noPrefixSchema({ userId });
         await newUser.save();
-        msg.reply(`Successfully added ${user.user.tag} to the no-prefix list.`).then((reply) => {
+
+        // Fetch the user to get their tag (optional)
+        const user = await msg.client.users.fetch(userId).catch(() => null);
+        const tag = user ? user.tag : userId;
+
+        msg.reply(`Successfully added ${tag} to the no-prefix list.`).then((reply) => {
           setTimeout(() => {
             reply.delete();
           }, 3000);
@@ -67,26 +63,17 @@ module.exports = {
       }
     } else if (subcommand === 'remove') {
       if (args.length < 2) {
-        return msg.reply('Please mention a user to remove.').then((reply) => {
+        return msg.reply('Please mention a user or provide their ID to remove.').then((reply) => {
           setTimeout(() => {
             reply.delete();
           }, 3000);
         });
       }
 
-      const replacedArg = args[1].replace(/[<@!>]/g, '');
-      const user = await msg.guild.members.fetch(replacedArg).catch(() => null);
-
-      if (!user) {
-        return msg.reply('Could not find that user. Please mention a valid user.').then((reply) => {
-          setTimeout(() => {
-            reply.delete();
-          }, 3000);
-        });
-      }
+      const userId = args[1].replace(/[<@!>]/g, ''); // Extract user ID from mention or plain ID
 
       try {
-        const removedUser = await noPrefixSchema.findOneAndDelete({ userId: user.id });
+        const removedUser = await noPrefixSchema.findOneAndDelete({ userId });
 
         if (!removedUser) {
           return msg.reply('User is not in the no-prefix list.').then((reply) => {
@@ -96,7 +83,11 @@ module.exports = {
           });
         }
 
-        msg.reply(`Successfully removed ${user.user.tag} from the no-prefix list.`).then((reply) => {
+        // Fetch the user to get their tag (optional)
+        const user = await msg.client.users.fetch(userId).catch(() => null);
+        const tag = user ? user.tag : userId;
+
+        msg.reply(`Successfully removed ${tag} from the no-prefix list.`).then((reply) => {
           setTimeout(() => {
             reply.delete();
           }, 3000);

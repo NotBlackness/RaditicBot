@@ -21,7 +21,7 @@ module.exports = {
         }
 
         // Fetch the messages from the channel
-        const messages = await msg.channel.messages.fetch({ limit: deleteAmount + 1 }); // +1 to account for excluding command message
+        const messages = await msg.channel.messages.fetch({ limit: deleteAmount + 1}); // +1 to account for excluding command message
         let filteredMessages = messages.filter(m => m.id !== msg.id); // Exclude the command executor's message
 
         // Get the filter option from arguments
@@ -48,14 +48,20 @@ module.exports = {
             }
         }
 
+        // Ensure at least 1 message to delete (excluding the command message)
+        if (filteredMessages.size === 0) {
+            return msg.reply('There are no messages matching the criteria.');
+        }
+
         // Bulk delete the filtered messages
         try {
-            await msg.channel.bulkDelete(filteredMessages, true);
+            await msg.channel.bulkDelete(filteredMessages, true); // Exclude system messages
+
             msg.channel.send(`Successfully deleted ${filteredMessages.size} messages.`).then((message) => {
                 setTimeout(() => {
                     message.delete();
-                })
-            })
+                }, 5000)
+            });
         } catch (error) {
             console.error(error);
             msg.reply('There was an error trying to purge messages in this channel!');

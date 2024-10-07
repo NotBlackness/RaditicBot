@@ -10,9 +10,12 @@ module.exports = {
     aliases: ['bi', 'about'],
     description: 'Shows some information about the bot.',
     async execute({ msg }) {
+        const ping = Date.now() - msg.createdTimestamp;
+        const latency = Math.abs(ping);
+        const latencyFormatted = `${latency.toString().substring(0, 2)}ms`;
         // Send initial message while processing the bot information
         const sent = await msg.reply({ content: "Getting bot information..." });
-
+        
         // Calculate uptime
         const days = Math.floor(msg.client.uptime / 86400000);
         const hours = Math.floor((msg.client.uptime / 3600000) % 24);
@@ -62,7 +65,7 @@ module.exports = {
                     { name: "**Total Member(s):**", value: `${msg.client.users.cache.size.toLocaleString()}`, inline: false },
                     { name: "**Total Channel(s):**", value: `${msg.client.channels.cache.size.toLocaleString()}`, inline: false },
                     { name: "**UpTime:**", value: `${uptimeString}`, inline: false },
-                    { name: "**Ping:**", value: `API Latency: **${Math.round(msg.client.ws.ping)}**ms\nClient Ping: **${sent.createdTimestamp - msg.createdTimestamp}**ms`, inline: false },
+                    { name: "**Ping:**", value: `API Latency: **${Math.round(msg.client.ws.ping)}**ms\nClient Ping: **${latencyFormatted}**`, inline: false },
                     { name: "\u200B", value: "\u200B", inline: false },
                     { name: "**NodeJS Version:**", value: `${nodeVersion}`, inline: false },
                     { name: "**Memory Usage:**", value: `${memoryUsage}`, inline: false },

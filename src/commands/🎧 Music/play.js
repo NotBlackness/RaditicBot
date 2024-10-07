@@ -19,6 +19,7 @@ module.exports = {
     const savedVolume = await Volume.findOne({ guildId: msg.guild.id });
     const volume = savedVolume ? savedVolume.volume : 50; // Default to 50 if no custom volume
 
+
     // Create the player with the volume set
     let player = await client.manager.createPlayer({
       guildId: msg.guild.id,

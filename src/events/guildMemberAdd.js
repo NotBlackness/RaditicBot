@@ -62,7 +62,7 @@ client.on("guildMemberAdd", async (member) => {
         channel.send('An error occurred while sending the welcome message.');
         console.error(e);
     }
-    
+
     // Autorole system
     try {
         const guildId = member.guild.id;

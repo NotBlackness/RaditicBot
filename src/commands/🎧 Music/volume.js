@@ -9,7 +9,9 @@ module.exports = {
   usage: 'volume [1-100]',
   async execute({ msg, args, client }) {
     const { channel } = msg.member.voice;
-    if (!channel) return msg.reply("You need to be in a voice channel to use this command!");
+    if (!channel || interaction.member.voice.channel !== interaction.guild.members.me.voice.channel) {
+      return msg.reply('❌ | You need to be in the same voice channel as the bot to skip the song.');
+    }
 
     const player = client.manager.players.get(msg.guild.id);
     if (!player) return msg.reply("No active player in this server.");

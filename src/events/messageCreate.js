@@ -92,7 +92,7 @@ client.on("messageCreate", async msg => {
     if (messageContent.startsWith(botMention) || messageContent.startsWith(botMentionWithExclamation)) prefixLength = messageContent.startsWith(botMention) ? botMention.length : botMentionWithExclamation.length;
     if (!prefixLength && messageContent.toLowerCase().startsWith("r.")) prefixLength = "r.".length;
     if (!prefixLength && messageContent.toLowerCase().startsWith(currentPrefix.toLowerCase())) prefixLength = currentPrefix.length;
-  
+
   if (prefixLength) {
     messageContent = msg.content.slice(prefixLength).trim();
     args = messageContent.split(/ +/);
