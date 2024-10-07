@@ -7,7 +7,7 @@ module.exports = {
       const { channel } = msg.member.voice;
       const player = client.manager.players.get(msg.guild.id);
 
-      if (!channel || interaction.member.voice.channel !== interaction.guild.members.me.voice.channel) {
+      if (!channel || msg.member.voice.channel !== msg.guild.members.me.voice.channel) {
         return msg.reply('❌ | You need to be in the same voice channel as the bot to skip the song.');
       }
 
