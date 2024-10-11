@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@mirasaki/logger": "^1.0.5",
+    "@top-gg/sdk": "^3.1.6",
     "@types/node": "^18.0.6",
     "ascii-table": "^0.0.9",
     "ascii-tables": "^0.0.1",

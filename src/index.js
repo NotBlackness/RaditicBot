@@ -4,15 +4,6 @@ const ms = require('pretty-ms');
 const config = require('./config.js');
 require('dotenv').config();
 const express = require('express');
-const app = express();
-const port = 3000;
-app.get('/', (req, res) => {
-  res.send('Online Yo Boy !');
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening to https://localhost:${port}`)
-});
 
 const { ActivityType, Collection, GatewayIntentBits, Client, Collector, VoiceChannel, EmbedBuilder, Partials } = require('discord.js');
 
@@ -176,6 +167,31 @@ client.manager.on("playerEmpty", player => {
   client.channels.cache.get(player.textId)?.send({content: `Destroyed player due to inactivity.`})
       .then(x => player.data.set("message", x));
   player.destroy();
+});
+
+const Topgg = require('@top-gg/sdk'); // Ensure you're using topgg SDK
+const app = express();
+
+// Initialize the webhook with your top.gg API token
+const webhook = new Topgg.Webhook(process.env.topggAPI); // Replace with actual environment variable or token
+
+app.post('/dblwebhook', webhook.listener(async (vote) => {
+  const user = await client.users.fetch(vote.user);
+  const channel = client.channels.cache.get('1288152244042334208'); // Your channel ID
+
+  // Sends a message in the channel when a vote is received
+  if (channel) {
+    channel.send(`<@${vote.user}> has voted for me!`);
+  }
+}));
+
+// Express listener on the port (ensure this matches your server setup)
+app.listen(3000, () => {
+  console.log('Express server listening on port 3000');
+});
+
+app.get('/', (req, res) => {
+  res.send('Online Yo Boy !');
 });
 
 client.login(token);
