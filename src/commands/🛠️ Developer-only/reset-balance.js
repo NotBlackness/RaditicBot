@@ -1,5 +1,5 @@
 const { mainOwnerId } = require('../../config');
-const User = require('../../Schemas/economy/userSchema');
+const User = require('../../Schemas/userAccount.js');
 
 module.exports = {
   name: 'reset-balance',
