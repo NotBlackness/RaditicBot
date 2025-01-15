@@ -10,6 +10,7 @@ module.exports = {
     const customEmojis = {
       // all custom emojis to help embed
       "MiniGames": "1286947790957842452",
+      "Economy": "1329065211940044820",
       "Moderation": "1286947195509276692",
       "Utils": "1286947168024002654",
       "Info": "1286947107856711751",

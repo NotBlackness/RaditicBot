@@ -1,4 +1,4 @@
-const { ownerIds } = require('../../config.js');
+const { mainOwnerId } = require('../../config.js');
 
 module.exports = {
   usage: 'r.say <message>',
