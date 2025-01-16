@@ -5,7 +5,7 @@ module.exports = {
   name: 'say',
   description: 'Say something',
   async execute({ msg, args }) {
-    if (!ownerIds.includes(msg.author.id)) return;
+    if (!mainOwnerId.includes(msg.author.id)) return;
 
     const message = args.join(' '); // Fixed args[0] to args
     if (!message) {
