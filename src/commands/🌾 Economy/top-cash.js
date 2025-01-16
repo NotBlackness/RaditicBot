@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const { emoji, color } = require('../../config');
 
 module.exports = {
-  usage: 'top-cash <limit>',
+  usage: 'top-cash [limit]',
   name: 'top-cash',
   aliases: ['topcash', 'top-c', 'topc'],
   description: 'Display the top users based on their balance.',
