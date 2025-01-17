@@ -1,70 +1,41 @@
 const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
-    usage: 'purge <amount/all> [filter]',
     name: 'purge',
-    description: 'Delete a number of messages or filter by specific criteria',
-    async execute({msg, args}) {
-        // Check if the user has Manage Messages permission
+    description: 'Delete messages from a channel (up to 100 messages).',
+    async execute({ msg, args }) {
         if (!msg.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-            return msg.reply('You do not have permission to manage messages.');
+            return msg.channel.send('❌ You do not have permission to use this command.');
         }
 
-        // Check if the first argument is "all" or a number
-        const amount = args[0];
-        let deleteAmount = parseInt(amount);
-
-        if (amount === 'all') deleteAmount = 100; // Max of 100 messages can be deleted at once
-
-        if (isNaN(deleteAmount) || deleteAmount <= 0 || deleteAmount > 100) {
-            return msg.reply('Please specify a valid number between 1 and 100 or use "all".');
+        const amountArg = args[0];
+        if (!amountArg || (isNaN(amountArg) && amountArg.toLowerCase() !== 'all')) {
+            return msg.channel.send('❌ Please provide a valid number of messages to delete or use `all`.');
         }
 
-        // Fetch the messages from the channel
-        const messages = await msg.channel.messages.fetch({ limit: deleteAmount + 1}); // +1 to account for excluding command message
-        let filteredMessages = messages.filter(m => m.id !== msg.id); // Exclude the command executor's message
+        let amount = amountArg.toLowerCase() === 'all' ? 100 : parseInt(amountArg);
 
-        // Get the filter option from arguments
-        const filter = args[1]?.toLowerCase();
-
-        // Apply the filter if provided
-        if (filter) {
-            switch (filter) {
-                case 'bots':
-                    filteredMessages = filteredMessages.filter(m => m.author.bot);
-                    break;
-                case 'humans':
-                    filteredMessages = filteredMessages.filter(m => !m.author.bot);
-                    break;
-                case 'attachments':
-                    filteredMessages = filteredMessages.filter(m => m.attachments.size > 0);
-                    break;
-                case 'links':
-                    const linkRegex = /(https?:\/\/[^\s]+)/g;
-                    filteredMessages = filteredMessages.filter(m => linkRegex.test(m.content));
-                    break;
-                default:
-                    return msg.reply('Invalid filter provided. Use one of the following: `bots`, `humans`, `attachments`, `links`.');
-            }
+        if (amount < 1 || amount > 100) {
+            return msg.channel.send('❌ You can only delete between 1 and 100 messages at a time.');
         }
 
-        // Ensure at least 1 message to delete (excluding the command message)
-        if (filteredMessages.size === 0) {
-            return msg.reply('There are no messages matching the criteria.');
-        }
-
-        // Bulk delete the filtered messages
         try {
-            await msg.channel.bulkDelete(filteredMessages, true); // Exclude system messages
+            // Deletes the command message first
+            await msg.delete();
 
-            msg.channel.send(`Successfully deleted ${filteredMessages.size} messages.`).then((message) => {
-                setTimeout(() => {
-                    message.delete();
-                }, 5000)
-            });
-        } catch (error) {
-            console.error(error);
-            msg.reply('There was an error trying to purge messages in this channel!');
+            // Fetches messages and excludes the command message itself
+            const fetchedMessages = await msg.channel.messages.fetch({ limit: amount });
+            const deletedMessages = await msg.channel.bulkDelete(fetchedMessages, true);
+
+            const deletedCount = deletedMessages.size;
+
+            // Sends feedback message
+            msg.channel
+                .send(`✅ Successfully deleted ${deletedCount} messages.`)
+                .then(sentMsg => setTimeout(() => sentMsg.delete(), 5000));
+        } catch (err) {
+            console.error(err);
+            msg.channel.send('❌ There was an error while trying to delete messages.');
         }
-    },
+    }
 };
