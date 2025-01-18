@@ -39,7 +39,7 @@ module.exports = {
       await user.save();
       await bank.save();
 
-      return msg.reply(`${msg.author.username}, you successfully deposited ${emoji.radigem} **__${amount.toLocaleString()} RadiGem** to your bank.`);
+      return msg.reply(`${msg.author.username}, you successfully deposited ${emoji.radigem} **__${amount.toLocaleString()}__** RG to your bank.`);
     } catch (error) {
       console.error(error);
       msg.reply('An error occurred while executing this command.');
