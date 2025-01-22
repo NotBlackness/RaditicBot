@@ -105,8 +105,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: 'lava-v4.ajieblogs.eu.org:80',
-  auth: 'https://dsc.gg/ajidevserver',
+  url: 'lavahatry4.techbyte.host:3000',
+  auth: 'NAIGLAVA-dash.techbyte.host',
   secure: false
 }];
 
