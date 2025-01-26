@@ -2,7 +2,7 @@ const Volume = require('../../Schemas/volumeSchema');
 const { PermissionsBitField, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-  usage: 'play <song name or url>',
+  usage: 'play <song name>',
   name: 'play',
   aliases: ['p'],
   description: 'Plays a song.',
