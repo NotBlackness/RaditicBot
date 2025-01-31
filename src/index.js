@@ -105,8 +105,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: 'lavalink.ipv4.oreshi.com:2333',
-  auth: 'mfkdlgmklmlenrfmklsdmnfkldnslkansdlknfdlksnflksdnkf',
+  url: 'lavalink.clxud.dev:2333',
+  auth: 'youshallnotpass',
   secure: false
 }];
 
