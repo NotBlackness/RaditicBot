@@ -105,8 +105,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: 'lava-v4.nextgencoders.xyz:2333',
-  auth: 'freemenahimilta',
+  url: 'lavalink.anantix.network:2335',
+  auth: 'pg6|(}7fuD_:7d#QQq?9',
   secure: false
 }];
 
