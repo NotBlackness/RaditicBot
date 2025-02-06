@@ -105,8 +105,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: 'lavalink.alya-project.me:2333',
-  auth: 'https://alya-project.me/',
+  url: '46.202.82.164:1027',
+  auth: 'jmlitev4',
   secure: false
 }];
 
