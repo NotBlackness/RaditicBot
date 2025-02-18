@@ -105,8 +105,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: '46.202.82.164:1027',
-  auth: 'jmlitev4',
+  url: 'robinz_lavalink.4tunez.xyz:2333',
+  auth: 'youshallnotpass',
   secure: false
 }];
 
