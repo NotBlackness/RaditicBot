@@ -105,8 +105,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: 'robinz_lavalink.4tunez.xyz:2333',
-  auth: 'youshallnotpass',
+  url: 'proxy.oreshi.com:2333',
+  auth: 'https://discord.gg/RPCfvBSUuM',
   secure: false
 }];
 
