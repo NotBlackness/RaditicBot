@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['p'],
   description: 'Plays a song or playlist from a name or URL.',
   async execute({ msg, args, client }) {
-    const query = args.slice(1).join(" ");
+    const query = args.join(" "); // FIX: Capture full input (URLs and text)
     const { channel } = msg.member.voice;
 
     if (!channel) return msg.reply("You need to be in a voice channel to use this command!");
