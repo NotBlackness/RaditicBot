@@ -4,7 +4,6 @@ const ms = require('pretty-ms');
 const config = require('./config.js');
 require('dotenv').config();
 const express = require('express');
-
 const { ActivityType, Collection, GatewayIntentBits, Client, Collector, VoiceChannel, EmbedBuilder, Partials } = require('discord.js');
 
 const Discord = require('discord.js');
@@ -105,8 +104,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: process.env.lavalink_url || readFileSync('src/lavalink-url.txt', 'utf-8'),
-  auth: process.env.lavalink_auth || readFileSync('src/lavalink-auth.txt', 'utf-8'),
+  url: config.lavalink_url,
+  auth: config.lavalinl_auth,
   secure: false
 }];
 

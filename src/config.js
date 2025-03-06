@@ -32,4 +32,6 @@ module.exports = {
     fun: "<:Fun:1286944571699232790>",
     music: "<:Music:1289450219355897937>"
   },
+  lavalink_url: process.env.lavalink_url || readFileSync('src/lavalink-url.txt', 'utf-8'),
+  lavalink_auth: process.env.lavalink_auth || readFileSync('src/lavalink-auth.txt', 'utf-8'),
 };
