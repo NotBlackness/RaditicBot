@@ -105,8 +105,8 @@ const { Kazagumo, Plugins } = require('kazagumo');
 
 const Nodes = [{
   name: 'RaditicMusic',
-  url: 'proxy.oreshi.com:2333',
-  auth: 'https://discord.gg/RPCfvBSUuM',
+  url: process.env.lavalink_url || readFileSync('src/lavalink-url.txt', 'utf-8'),
+  auth: process.env.lavalink_auth || readFileSync('src/lavalink-auth.txt', 'utf-8'),
   secure: false
 }];
 
