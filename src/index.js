@@ -105,7 +105,7 @@ const { Kazagumo, Plugins } = require('kazagumo');
 const Nodes = [{
   name: 'RaditicMusic',
   url: config.lavalink_url,
-  auth: config.lavalinl_auth,
+  auth: config.lavalink_auth,
   secure: false
 }];
 
