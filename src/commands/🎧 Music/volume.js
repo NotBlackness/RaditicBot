@@ -6,7 +6,7 @@ module.exports = {
   name: 'volume',
   aliases: ['vol'],
   description: 'Set or check the volume for the music player.',
-  usage: 'volume [1-100]',
+  usage: 'volume [1-200]',
   async execute({ msg, args, client }) {
     const { channel } = msg.member.voice;
     if (!channel || msg.member.voice.channel !== msg.guild.members.me.voice.channel) {
@@ -28,8 +28,8 @@ module.exports = {
       return msg.reply(`The current volume is set to \`${currentVolume}\`.`);
     }
 
-    if (volume < 1 || volume > 100) {
-      return msg.reply("Please provide a valid volume level between 1 and 100.");
+    if (volume < 1 || volume > 200) {
+      return msg.reply("Please provide a valid volume level between 1 and 200.");
     }
 
     // Set player volume
