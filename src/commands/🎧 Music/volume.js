@@ -1,4 +1,4 @@
-const Volume = require('../../Schemas/volumeSchema'); // Assuming VolumeSchema.js is in a models folder
+const Volume = require('../../Schemas/volumeSchema');
 const { EmbedBuilder } = require('discord.js');
 const { color } = require('../../config');
 
@@ -10,7 +10,7 @@ module.exports = {
   async execute({ msg, args, client }) {
     const { channel } = msg.member.voice;
     if (!channel || msg.member.voice.channel !== msg.guild.members.me.voice.channel) {
-      return msg.reply('❌ | You need to be in the same voice channel as the bot to skip the song.');
+      return msg.reply('❌ | You need to be in the same voice channel as the bot to change the volume.');
     }
 
     const player = client.manager.players.get(msg.guild.id);
@@ -24,7 +24,7 @@ module.exports = {
     if (isNaN(volume)) {
       // Fetch current volume from database or return player's volume if no volume in the database
       const savedVolume = await Volume.findOne({ guildId: msg.guild.id });
-      const currentVolume = savedVolume ? savedVolume.volume : 50; // Default to 40 if no volume is set
+      const currentVolume = savedVolume ? savedVolume.volume : 50; // Default to 50 if no volume is set
       return msg.reply(`The current volume is set to \`${currentVolume}\`.`);
     }
 
@@ -42,11 +42,19 @@ module.exports = {
       { upsert: true, new: true }
     );
 
-    // Create an embed message to show success
+    // Embed for volume confirmation
+    let volumeMessage = `🔊 The volume has been set to \`${volume}\`%.`;
+    let embedColor = color.default;
+
+    if (volume > 100) {
+      volumeMessage += "\n⚠️ High volume may cause distortion!";
+      embedColor = 0xffcc00; // Yellow warning color
+    }
+
     const embed = new EmbedBuilder()
-      .setColor(color.default)
+      .setColor(embedColor)
       .setTitle('Volume Updated')
-      .setDescription(`🔊 The volume has been set to \`${volume}\`%.`)
+      .setDescription(volumeMessage)
       .setFooter({ text: 'Use the command again to change the volume.' })
       .setTimestamp();
 
