@@ -47,7 +47,7 @@ module.exports = {
     let embedColor = color.default;
 
     if (volume > 100) {
-      volumeMessage += "\n⚠️ High volume may cause distortion!";
+      volumeMessage += "\n\n```⚠️ High volume may cause distortion!```";
       embedColor = 0xffcc00; // Yellow warning color
     }
 
