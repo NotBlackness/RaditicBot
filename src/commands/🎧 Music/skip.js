@@ -3,6 +3,7 @@ const { PermissionsBitField } = require('discord.js');
 module.exports = {
   usage: 'skip',
   name: 'skip',
+  aliases: ['s'],
   description: 'Skips the currently playing song.',
   async execute({ msg, client }) {
     const {channel} = msg.member.voice;

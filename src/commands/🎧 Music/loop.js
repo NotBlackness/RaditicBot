@@ -1,9 +1,9 @@
 module.exports = {
-  usage: 'loop',
+  usage: 'loop <song|queue|off>',
   name: 'loop',
-  aliases: ['repeat'],
-  description: 'Toggles looping for the currently playing song.',
-  async execute({ msg, client }) {
+  aliases: ['repeat', 'l'],
+  description: 'Toggles looping for the current song, the queue, or disables looping.',
+  async execute({ msg, args, client }) {
     const player = client.manager.players.get(msg.guild.id);
 
     if (!player) {
@@ -18,13 +18,24 @@ module.exports = {
       return msg.reply("You need to be in the same voice channel as the bot to use this command!");
     }
 
-    // Toggle loop state
-    if (player.loop === 'track') {
-      player.setLoop('none'); // Disable loop
-      return msg.reply("Looping has been **disabled** for the current song.");
-    } else {
-      player.setLoop('track'); // Enable loop
-      return msg.reply("Looping has been **enabled** for the current song.");
+    const option = args[0]?.toLowerCase();
+
+    if (!option) {
+      return msg.reply("Please specify a loop mode: `song`, `queue`, or `off`.");
+    }
+
+    switch (option) {
+      case 'song':
+        player.setLoop('track');
+        return msg.reply("Looping has been **enabled** for the current song.");
+      case 'queue':
+        player.setLoop('queue');
+        return msg.reply("Looping has been **enabled** for the queue.");
+      case 'off':
+        player.setLoop('none');
+        return msg.reply("Looping has been **disabled**.");
+      default:
+        return msg.reply("Invalid option! Please use `song`, `queue`, or `off`.");
     }
   }
 };

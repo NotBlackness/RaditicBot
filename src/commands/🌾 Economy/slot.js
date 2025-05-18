@@ -6,7 +6,6 @@ const { emoji, color } = require('../../config.js');
 module.exports = {
   usage: 'slot <amount>',
   name: 'slot',
-  aliases: ['s'],
   description: 'Play a slot machine game.',
   async execute({ msg, args }) {
     try {
